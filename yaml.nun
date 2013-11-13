@@ -1,0 +1,6 @@
+- key: {{key}}
+  {{valueKey|default("value")}}: {{value}}
+  {%- if comments %}
+  comment: |
+    {{comments|join("\n    ")}}
+  {%- endif -%}

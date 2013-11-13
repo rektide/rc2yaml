@@ -14,15 +14,20 @@ function Rc2Yaml(opts){
 }
 util.inherits(Rc2Yaml, stream.Transform)
 Rc2Yaml.prototype._transform= function(chunk,enc,cb){
-	console.log("chunk",chunk)
+	var stanza= this.stanza||(this.stanza= {})
+	console.log("chunk",chunk,this.stanza)
 	var comm= this.comment.exec(chunk)
 	if(comm){
-		this.comments= this.comments||[]
-		this.comments.push(comm[1])
+		var comms= stanza.comments||(stanza.comments= [])
+		comms.push(comm[1])
 	}
 	var kv= comm?null:this.line.exec(chunk)
 	if(kv){
-		console.log("kv",kv)
+		stanza.key= kv[1]
+		stanza.value= kv[2]
+		var rendered= this.template.render(stanza)
+		this.push(rendered)
+		this.stanza= null
 	}
 	cb()
 }
@@ -32,9 +37,13 @@ Rc2Yaml.prototype._flush= function(done){
 Rc2Yaml.prototype.configure= function(opts){
 	var chomp= opts.noChomp?"":"\\s*",
 	  comments= (opts.comment||"^#")+chomp+"(.*)",
-	  line= "(.+?)"+chomp+(opts.lineSep||"\\s")+chomp+"(.*)"
+	  line= "(.+?)"+chomp+(opts.lineSep||"\\s")+chomp+"(.*)",
+	  template= opts.template||"yaml.nun"
+console.log("==",line,comments)
 	this.comment= new RegExp(comments)
 	this.line= new RegExp(line)
+	this.nunjucks= new nunjucks.Environment(new nunjucks.FileSystemLoader(".", true), { autoescape: false })
+	this.template= this.nunjucks.getTemplate(template, true)
 }
 
 if(require.main == module){
