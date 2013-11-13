@@ -15,7 +15,7 @@ function Rc2Yaml(opts){
 }
 util.inherits(Rc2Yaml, stream.Transform)
 Rc2Yaml.prototype._transform= function(chunk,enc,cb){
-	var stanza= this.stanza||(this.stanza= {}),
+	var stanza= this.stanza||(this.stanza= {quoteValue: this.quoteValue}),
 	  emit= false
 	var comm= this.comment.exec(chunk)
 	if(comm){
@@ -46,9 +46,6 @@ Rc2Yaml.prototype._transform= function(chunk,enc,cb){
 	}
 	cb()
 }
-Rc2Yaml.prototype._flush= function(done){
-	done()
-}
 Rc2Yaml.prototype.configure= function(opts){
 	var chomp= opts.noChomp?"":"\\s*",
 	  comments= "^"+chomp+(opts.comment||"#")+chomp+"(.*)",
@@ -61,6 +58,7 @@ Rc2Yaml.prototype.configure= function(opts){
 	this.line= new RegExp(line)
 	this.blank= new RegExp("\n","g")
 	this.commentedDefault= opts.commentedDefault!==undefined?opts.commentedDefault:true
+	this.quoteValue= opts.quoteValue!==undefined?opts.quoteValue:true
 
 	this.nunjucks= new nunjucks.Environment(new nunjucks.FileSystemLoader(".", true), { autoescape: false })
 	this.template= this.nunjucks.getTemplate(template, true)
@@ -68,7 +66,7 @@ Rc2Yaml.prototype.configure= function(opts){
 Rc2Yaml.prototype._parseLine= function(line,dest){
 	if(line && line.length >= 3){
 		dest.key= line[1]
-		dest.value= line[2]
+		dest.value= line[2].replace('"','\"')
 	}
 	return dest
 }

@@ -1,5 +1,5 @@
 - key: {{key}}
-  {{valueKey|default("value")}}: {{value}}
+  {{valueKey|default("value")}}: {{ '"' if quoteValue }}{{value}}{{ '"' if quoteValue }}
   {%- if comments %}
   comment: |
     {{comments|join("\n    ")}}
