@@ -1,0 +1,47 @@
+#!/usr/bin/env node
+var nunjucks= require("nunjucks"),
+  stream= require("stream"),
+  util= require("util")
+
+function Rc2Yaml(opts){
+	if(!(this instanceof Rc2Yaml)){
+		return new Rc2Yaml()
+	}
+	Rc2Yaml.super_.call(this,opts)
+	opts= opts||{}
+
+	this.configure(opts)
+}
+util.inherits(Rc2Yaml, stream.Transform)
+Rc2Yaml.prototype._transform= function(chunk,enc,cb){
+	console.log("chunk",chunk)
+	var comm= this.comment.exec(chunk)
+	if(comm){
+		this.comments= this.comments||[]
+		this.comments.push(comm[1])
+	}
+	var kv= comm?null:this.line.exec(chunk)
+	if(kv){
+		console.log("kv",kv)
+	}
+	cb()
+}
+Rc2Yaml.prototype._flush= function(done){
+	done()
+}
+Rc2Yaml.prototype.configure= function(opts){
+	var chomp= opts.noChomp?"":"\\s*",
+	  comments= (opts.comment||"^#")+chomp+"(.*)",
+	  line= "(.+?)"+chomp+(opts.lineSep||"\\s")+chomp+"(.*)"
+	this.comment= new RegExp(comments)
+	this.line= new RegExp(line)
+}
+
+if(require.main == module){
+	var eachline= require("eachline"),
+	  optimist= require("optimist"),
+	  stdin= process.stdin,
+	  stdout= process.stdout
+	var argv= optimist.argv
+	stdin.pipe(new eachline()).pipe(new Rc2Yaml()).pipe(stdout)
+}
