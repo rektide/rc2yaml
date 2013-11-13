@@ -37,9 +37,9 @@ Rc2Yaml.prototype._transform= function(chunk,enc,cb){
 	if(emit){
 		var rendered= this.template.render(stanza)
 		if(!this.first){
-			this.push("\n")
-		}else{
 			this.first= true
+		}else{
+			this.push("\n")
 		}
 		this.push(rendered)
 		this.stanza= null
@@ -50,13 +50,13 @@ Rc2Yaml.prototype.configure= function(opts){
 	var chomp= opts.noChomp?"":"\\s*",
 	  comments= "^"+chomp+(opts.comment||"#")+chomp+"(.*)",
 	  line= "(.+?)"+chomp+(opts.lineSep||"\\s")+chomp+"(.*)",
-	  blank= opts.blank||"^\n$",
+	  blank= opts.blank||"\n",
 	  template= opts.template||"yaml.nun"
 	if(opts.fullCommentExpr) comments= opts.comment
 
 	this.comment= new RegExp(comments)
 	this.line= new RegExp(line)
-	this.blank= new RegExp("\n","g")
+	this.blank= new RegExp("\n")
 	this.commentedDefault= opts.commentedDefault!==undefined?opts.commentedDefault:true
 	this.quoteValue= opts.quoteValue!==undefined?opts.quoteValue:true
 
