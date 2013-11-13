@@ -51,10 +51,11 @@ Rc2Yaml.prototype._flush= function(done){
 }
 Rc2Yaml.prototype.configure= function(opts){
 	var chomp= opts.noChomp?"":"\\s*",
-	  comments= (opts.comment||"^#")+chomp+"(.*)",
+	  comments= "^"+chomp+(opts.comment||"#")+chomp+"(.*)",
 	  line= "(.+?)"+chomp+(opts.lineSep||"\\s")+chomp+"(.*)",
 	  blank= opts.blank||"^\n$",
 	  template= opts.template||"yaml.nun"
+	if(opts.fullCommentExpr) comments= opts.comment
 
 	this.comment= new RegExp(comments)
 	this.line= new RegExp(line)
