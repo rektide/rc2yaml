@@ -11,11 +11,12 @@ function Rc2Yaml(opts){
 	opts= opts||{}
 
 	this.configure(opts)
+	this.first= false
 }
 util.inherits(Rc2Yaml, stream.Transform)
 Rc2Yaml.prototype._transform= function(chunk,enc,cb){
-	var stanza= this.stanza||(this.stanza= {})
-	console.log("chunk",chunk,this.stanza)
+	var stanza= this.stanza||(this.stanza= {}),
+	  emit= false
 	var comm= this.comment.exec(chunk)
 	if(comm){
 		var comms= stanza.comments||(stanza.comments= [])
@@ -23,9 +24,23 @@ Rc2Yaml.prototype._transform= function(chunk,enc,cb){
 	}
 	var kv= comm?null:this.line.exec(chunk)
 	if(kv){
-		stanza.key= kv[1]
-		stanza.value= kv[2]
+		this._parseLine(kv, stanza)
+		emit= true
+	}
+	var blank= comm||kv?null:this.blank.exec(chunk)
+	if(blank && stanza.comments && this.commentedDefault){
+		var last= stanza.comments.pop(),
+		  line= this.line.exec(last)
+		this._parseLine(line, stanza)
+		emit= true
+	}
+	if(emit){
 		var rendered= this.template.render(stanza)
+		if(!this.first){
+			this.push("\n")
+		}else{
+			this.first= true
+		}
 		this.push(rendered)
 		this.stanza= null
 	}
@@ -38,12 +53,23 @@ Rc2Yaml.prototype.configure= function(opts){
 	var chomp= opts.noChomp?"":"\\s*",
 	  comments= (opts.comment||"^#")+chomp+"(.*)",
 	  line= "(.+?)"+chomp+(opts.lineSep||"\\s")+chomp+"(.*)",
+	  blank= opts.blank||"^\n$",
 	  template= opts.template||"yaml.nun"
-console.log("==",line,comments)
+
 	this.comment= new RegExp(comments)
 	this.line= new RegExp(line)
+	this.blank= new RegExp("\n","g")
+	this.commentedDefault= opts.commentedDefault!==undefined?opts.commentedDefault:true
+
 	this.nunjucks= new nunjucks.Environment(new nunjucks.FileSystemLoader(".", true), { autoescape: false })
 	this.template= this.nunjucks.getTemplate(template, true)
+}
+Rc2Yaml.prototype._parseLine= function(line,dest){
+	if(line && line.length >= 3){
+		dest.key= line[1]
+		dest.value= line[2]
+	}
+	return dest
 }
 
 if(require.main == module){
@@ -51,6 +77,7 @@ if(require.main == module){
 	  optimist= require("optimist"),
 	  stdin= process.stdin,
 	  stdout= process.stdout
+	eachline.blankLines= true
 	var argv= optimist.argv
 	stdin.pipe(new eachline()).pipe(new Rc2Yaml()).pipe(stdout)
 }
