@@ -1,6 +1,3 @@
-- key: {{key}}
-  {{valueKey|default("value")}}: {{ '"' if quoteValue }}{{value}}{{ '"' if quoteValue }}
-  {%- if comments %}
-  comment: |
-    {{comments|join("\n    ")}}
-  {%- endif -%}
+{% for k, v in stanza %}{% if k != "stanza" -%}
+{{ "-" if loop.first else " " }} {{k}}: {{v|string|indent(4)}}
+{%- endif %}{% endfor -%}

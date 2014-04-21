@@ -1,0 +1,25 @@
+{
+	"name": "rc2yaml",
+	"version": "1.0.0",
+	"description": "Convert RC files into yaml",
+	"main": "rc2yaml",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/rektide/rc2yaml.git"
+	},
+	"author": "",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/rektide/rc2yaml/issues"
+	},
+	"dependencies": {
+		"byline": "^4.1.1",
+		"lodash": "^2.4.1",
+		"nunjucks": "^1.0.4",
+		"stream-array": "^0.1.3",
+		"yargs": "^1.2.1"
+	}
+}

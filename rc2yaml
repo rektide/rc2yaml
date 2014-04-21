@@ -1,82 +1,15 @@
 #!/usr/bin/env node
-var nunjucks= require("nunjucks"),
-  stream= require("stream"),
-  util= require("util")
-
-function Rc2Yaml(opts){
-	if(!(this instanceof Rc2Yaml)){
-		return new Rc2Yaml()
-	}
-	Rc2Yaml.super_.call(this,opts)
-	opts= opts||{}
-
-	this.configure(opts)
-	this.first= false
-}
-util.inherits(Rc2Yaml, stream.Transform)
-Rc2Yaml.prototype._transform= function(chunk,enc,cb){
-	var stanza= this.stanza||(this.stanza= {quoteValue: this.quoteValue}),
-	  emit= false
-	var comm= this.comment.exec(chunk)
-	if(comm){
-		var comms= stanza.comments||(stanza.comments= [])
-		comms.push(comm[1])
-	}
-	var kv= comm?null:this.line.exec(chunk)
-	if(kv){
-		this._parseLine(kv, stanza)
-		emit= true
-	}
-	var blank= comm||kv?null:this.blank.exec(chunk)
-	if(blank && stanza.comments && this.commentedDefault){
-		var last= stanza.comments.pop(),
-		  line= this.line.exec(last)
-		this._parseLine(line, stanza)
-		emit= true
-	}
-	if(emit){
-		var rendered= this.template.render(stanza)
-		if(!this.first){
-			this.first= true
-		}else{
-			this.push("\n")
-		}
-		this.push(rendered)
-		this.stanza= null
-	}
-	cb()
-}
-Rc2Yaml.prototype.configure= function(opts){
-	var chomp= opts.noChomp?"":"\\s*",
-	  comments= "^"+chomp+(opts.comment||"#")+chomp+"(.*)",
-	  line= "(.+?)"+chomp+(opts.lineSep||"\\s")+chomp+"(.*)",
-	  blank= opts.blank||"\n",
-	  template= opts.template||"yaml.nun"
-	if(opts.fullCommentExpr) comments= opts.comment
-
-	this.comment= new RegExp(comments)
-	this.line= new RegExp(line)
-	this.blank= new RegExp("\n")
-	this.commentedDefault= opts.commentedDefault!==undefined?opts.commentedDefault:true
-	this.quoteValue= opts.quoteValue!==undefined?opts.quoteValue:true
-
-	this.nunjucks= new nunjucks.Environment(new nunjucks.FileSystemLoader(".", true), { autoescape: false })
-	this.template= this.nunjucks.getTemplate(template, true)
-}
-Rc2Yaml.prototype._parseLine= function(line,dest){
-	if(line && line.length >= 3){
-		dest.key= line[1]
-		dest.value= line[2].replace('"','\"')
-	}
-	return dest
-}
 
 if(require.main == module){
-	var eachline= require("eachline"),
-	  optimist= require("optimist"),
-	  stdin= process.stdin,
-	  stdout= process.stdout
-	eachline.blankLines= true
-	var argv= optimist.argv
-	stdin.pipe(new eachline()).pipe(new Rc2Yaml()).pipe(stdout)
+	var byline= require("byline"),
+	  RcReader= require("./rc-reader"),
+	  RcReader2= require("./rc-reader-2"),
+	  YamlWriter= require("./yaml-writer")
+
+	var stdin= process.stdin,
+	  stdout= process.stdout,
+	  byliner= byline.createStream(null, {keepEmptyLines: true}),
+	  rcReader= new RcReader(),
+	  yamlWriter= new YamlWriter()
+	stdin.pipe(byliner).pipe(rcReader).pipe(yamlWriter).pipe(stdout)
 }
