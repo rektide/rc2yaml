@@ -15,7 +15,6 @@ if(require.main == module){
 		  json= JSON.parse(file)
 		if(!(json instanceof Array))
 			throw "Input not an array"
-		console.log("KEY",keys)
 		streamArray(json).pipe(new YamlWriter({keys:keys})).pipe(process.stdout)
 	}catch(ex){
 		console.error(ex, ex.stack)
