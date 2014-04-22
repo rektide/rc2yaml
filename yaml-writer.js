@@ -1,4 +1,6 @@
 var _= require("lodash"),
+  fs= require("fs"),
+  path= require("path"),
   stream= require("stream"),
   util= require("util"),
   nunjucks= require("nunjucks")
@@ -39,8 +41,19 @@ YamlWriter.prototype._transform= function(chunk,enc,cb){
 	cb()
 }
 YamlWriter.prototype.configure= function(opts){
-	this.nunjucks= new nunjucks.Environment(new nunjucks.FileSystemLoader(".", true), {autoescape: false})
-	var template= opts.template||"yaml.nun"
+	var dir= process.argv[0]
+	try{
+		var node= "node"
+		if(dir.lastIndexOf(node) == dir.length-node.length){
+			root= path.dirname(process.argv[1])
+			dir= fs.readlinkSync(process.argv[1])
+			dir= path.dirname(dir)
+			dir= path.resolve(root, dir)
+		}
+	}catch(ex){
+	}
+	this.nunjucks= new nunjucks.Environment(new nunjucks.FileSystemLoader(dir, true), {autoescape: false})
+	var template= opts.template||"./yaml.nun"
 	this.template= this.nunjucks.getTemplate(template, true)
 	this.keys= opts.keys||["key","value"]
 

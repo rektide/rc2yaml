@@ -4,8 +4,8 @@ if(require.main == module){
 	var fs= require("fs"),
 	  streamArray= require("stream-array"),
 	  argv= require("yargs")
-	    .default('keys', 'key,value')
 	    .alias('keys', 'k')
+	    .default('keys', 'key,value')
 	    .argv,
 	  YamlWriter= require("./yaml-writer"),
 	  keys= argv.keys.split(",")
