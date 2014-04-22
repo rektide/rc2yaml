@@ -3,6 +3,10 @@
 	"version": "1.0.0",
 	"description": "Convert RC files into yaml",
 	"main": "rc2yaml",
+	"bin": {
+		"rc2yaml": "./rc2yaml",
+		"json2yaml": "./json2yaml"
+	},
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
