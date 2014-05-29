@@ -1,0 +1,34 @@
+#!/usr/bin/env node
+var stream= require("stream"),
+  util= require("util")
+
+function Indenter(opts){
+	if(!(this instanceof Indenter)){
+		return new Indenter(opts)
+	}
+	opts= opts||{}
+	stream.Transform.call(this, opts)
+	this.push(opts.key+":\n")
+}
+util.inherits(Indenter, stream.Transform)
+Indenter.prototype._transform= function(chunk,enc,cb){
+	this.push("  "+chunk+"\n")
+	cb()
+}
+
+module.exports= Indenter
+module.exports.Indenter= Indenter
+
+if(require.main == module){
+	if(process.argv.length < 3)
+		throw "Require a 'key' argument"
+	if(process.argv.length > 3)
+		throw "Too many arguments"
+
+	var byline= require("byline")
+	var stdin= process.stdin,
+	  stdout= process.stdout,
+	  byliner= byline.createStream(null, {keepEmptyLines: true}),
+	  indenter= new Indenter({key: process.argv[2]})
+	stdin.pipe(byliner).pipe(indenter).pipe(stdout)
+}
